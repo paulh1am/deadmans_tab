@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 300px;
+      padding: 20px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      margin: 0;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .subtitle {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+    
+    .status {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .status-indicator {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    
+    .status-indicator.active {
+      background: #ff4444;
+      box-shadow: 0 0 10px #ff4444;
+    }
+    
+    .status-indicator.inactive {
+      background: #666;
+    }
+    
+    .status-text {
+      font-weight: bold;
+    }
+    
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .activate-btn {
+      background: #ff4444;
+      color: white;
+    }
+    
+    .activate-btn:hover {
+      background: #ff6666;
+      transform: translateY(-2px);
+    }
+    
+    .deactivate-btn {
+      background: #666;
+      color: white;
+    }
+    
+    .deactivate-btn:hover {
+      background: #888;
+      transform: translateY(-2px);
+    }
+    
+    .info {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 11px;
+      line-height: 1.4;
+      margin-top: 15px;
+    }
+    
+    .warning {
+      background: rgba(255, 68, 68, 0.2);
+      border: 1px solid rgba(255, 68, 68, 0.5);
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 11px;
+      line-height: 1.4;
+      margin-top: 15px;
+    }
+    
+    .key-selection {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .key-selection label {
+      display: block;
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      opacity: 0.9;
+    }
+    
+    .key-select {
+      width: 100%;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+    
+    .key-select:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+    }
+    
+    .current-key {
+      font-size: 11px;
+      opacity: 0.8;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">💀 Dead Man's Tab</div>
+    <div class="subtitle">Hold a key to stay alive</div>
+  </div>
+  
+  <div class="status">
+    <span class="status-indicator inactive" id="statusIndicator"></span>
+    <span class="status-text" id="statusText">Inactive</span>
+  </div>
+  
+  <div class="key-selection">
+    <label for="keySelect">Select Dead Man's Key:</label>
+    <select id="keySelect" class="key-select">
+      <option value="Space">Space</option>
+      <option value="Enter">Enter</option>
+      <option value="ShiftLeft">Left Shift</option>
+      <option value="ShiftRight">Right Shift</option>
+      <option value="ControlLeft">Left Ctrl</option>
+      <option value="ControlRight">Right Ctrl</option>
+      <option value="AltLeft">Left Alt</option>
+      <option value="AltRight">Right Alt</option>
+      <option value="Tab">Tab</option>
+      <option value="Escape">Escape</option>
+      <option value="Backspace">Backspace</option>
+      <option value="Delete">Delete</option>
+      <option value="ArrowUp">↑ Arrow Up</option>
+      <option value="ArrowDown">↓ Arrow Down</option>
+      <option value="ArrowLeft">← Arrow Left</option>
+      <option value="ArrowRight">→ Arrow Right</option>
+      <option value="KeyA">A</option>
+      <option value="KeyB">B</option>
+      <option value="KeyC">C</option>
+      <option value="KeyD">D</option>
+      <option value="KeyE">E</option>
+      <option value="KeyF">F</option>
+      <option value="KeyG">G</option>
+      <option value="KeyH">H</option>
+      <option value="KeyI">I</option>
+      <option value="KeyJ">J</option>
+      <option value="KeyK">K</option>
+      <option value="KeyL">L</option>
+      <option value="KeyM">M</option>
+      <option value="KeyN">N</option>
+      <option value="KeyO">O</option>
+      <option value="KeyP">P</option>
+      <option value="KeyQ">Q</option>
+      <option value="KeyR">R</option>
+      <option value="KeyS">S</option>
+      <option value="KeyT">T</option>
+      <option value="KeyU">U</option>
+      <option value="KeyV">V</option>
+      <option value="KeyW">W</option>
+      <option value="KeyX">X</option>
+      <option value="KeyY">Y</option>
+      <option value="KeyZ">Z</option>
+    </select>
+    <div class="current-key" id="currentKey">Current: Space</div>
+  </div>
+  
+  <div class="controls">
+    <button id="activateBtn" class="activate-btn">🚨 ACTIVATE</button>
+    <button id="deactivateBtn" class="deactivate-btn" style="display: none;">✅ Deactivate</button>
+  </div>
+  
+  <div class="info">
+    <strong>How it works:</strong><br>
+    • Select your Dead Man's key from the dropdown<br>
+    • Click ACTIVATE to enable Dead Man's Tab<br>
+    • Hold down your selected key to keep the tab alive<br>
+    • Release the key and the tab will close!
+  </div>
+  
+  <div class="warning">
+    ⚠️ <strong>Warning:</strong> This will close your current tab when you release the key. Make sure you've saved any important work!
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
