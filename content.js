@@ -65,15 +65,13 @@ function handleKeyDown(event) {
 function handleKeyUp(event) {
   if (!isDeadMansTabActive) return;
   
-  // If the released key is the dead man's key, close the tab
+  // If the released key is the dead man's key, close the tab immediately
   if (event.code === deadMansKey && isKeyHeld) {
     isKeyHeld = false;
-    showNotification(`${getKeyDisplayName(deadMansKey)} released! Closing tab in 1 second...`);
+    showNotification(`${getKeyDisplayName(deadMansKey)} released! Closing tab...`);
     
-    // Give a brief moment for the user to see the notification
-    setTimeout(() => {
-      chrome.runtime.sendMessage({action: 'closeTab'});
-    }, 1000);
+    // Close tab immediately
+    chrome.runtime.sendMessage({action: 'closeTab'});
   }
 }
 
