@@ -277,8 +277,43 @@ function showVisualIndicator() {
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     border: 2px solid #fff;
     animation: pulse 2s infinite;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
   `;
   indicator.textContent = '💀 DEAD MAN\'S TAB ACTIVE';
+  indicator.title = 'Click to open extension popup';
+  
+  // Add hover effect
+  indicator.addEventListener('mouseenter', () => {
+    indicator.style.background = '#ff6666';
+    indicator.style.transform = 'scale(1.05)';
+  });
+  indicator.addEventListener('mouseleave', () => {
+    indicator.style.background = '#ff4444';
+    indicator.style.transform = 'scale(1)';
+  });
+  
+  // Make it clickable - send message to background to open popup
+  indicator.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent any page interactions
+    console.log('Dead Man\'s Tab: Indicator clicked - requesting popup open');
+    chrome.runtime.sendMessage({action: 'openPopup'}, (response) => {
+      if (chrome.runtime.lastError || (response && !response.success)) {
+        console.log('Dead Man\'s Tab: Could not open popup programmatically');
+        // Show a brief message directing user to click extension icon
+        const originalText = indicator.textContent;
+        indicator.textContent = '👆 Click extension icon';
+        indicator.style.background = '#ff6666';
+        setTimeout(() => {
+          indicator.textContent = originalText;
+          indicator.style.background = '#ff4444';
+        }, 2000);
+      } else {
+        console.log('Dead Man\'s Tab: Popup open request sent');
+      }
+    });
+  });
   
   // Add pulse animation
   const style = document.createElement('style');

@@ -22,6 +22,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         console.log('Dead Man\'s Tab: No active tab found to close');
       }
     });
+  } else if (request.action === 'openPopup') {
+    console.log('Dead Man\'s Tab: Attempting to open popup');
+    // Try to open the popup (requires user gesture, which we have from the click)
+    chrome.action.openPopup((result) => {
+      if (chrome.runtime.lastError) {
+        console.log('Dead Man\'s Tab: Could not open popup:', chrome.runtime.lastError);
+        sendResponse({success: false, error: chrome.runtime.lastError.message});
+      } else {
+        console.log('Dead Man\'s Tab: Popup opened successfully');
+        sendResponse({success: true});
+      }
+    });
+    return true; // Keep message channel open for async response
   } else if (request.action === 'getStatus') {
     sendResponse({status: isActive ? 'active' : 'inactive'});
   } else if (request.action === 'setStatus') {

@@ -266,9 +266,20 @@ function setActive(active) {
 }
 
 function checkStatus() {
-  chrome.runtime.sendMessage({action: 'getStatus'}, (response) => {
-    if (response && response.status === 'active') {
-      setActive(true);
+  // Check the current tab's content script status (not global background status)
+  chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+    if (tabs[0]) {
+      chrome.tabs.sendMessage(tabs[0].id, {action: 'getStatus'}, (response) => {
+        if (chrome.runtime.lastError) {
+          // Content script not loaded or error - assume inactive
+          console.log('Dead Man\'s Tab: Could not get status from content script, assuming inactive');
+          setActive(false);
+        } else if (response && response.status === 'active') {
+          setActive(true);
+        } else {
+          setActive(false);
+        }
+      });
     } else {
       setActive(false);
     }
