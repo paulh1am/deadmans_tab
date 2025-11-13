@@ -2,21 +2,24 @@
 // This script runs on every webpage and handles the key press/release logic
 
 let isDeadMansTabActive = false;
-let deadMansKey = 'Space'; // The key that will trigger tab closure
+let deadMansKey = null; // No default key - must be set by user
 let isKeyHeld = false;
 let keyPressStartTime = null;
 
 // Listen for messages from the popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'activate') {
-    deadMansKey = request.key || 'Space';
+    deadMansKey = request.key;
+    console.log('Dead Man\'s Tab: Activating with key:', deadMansKey);
     activateDeadMansTab();
     sendResponse({status: 'activated'});
   } else if (request.action === 'deactivate') {
+    console.log('Dead Man\'s Tab: Deactivating');
     deactivateDeadMansTab();
     sendResponse({status: 'deactivated'});
   } else if (request.action === 'updateKey') {
     deadMansKey = request.key;
+    console.log('Dead Man\'s Tab: Key updated to:', deadMansKey);
     sendResponse({status: 'keyUpdated'});
   } else if (request.action === 'getStatus') {
     sendResponse({status: isDeadMansTabActive ? 'active' : 'inactive'});
@@ -26,7 +29,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 function activateDeadMansTab() {
   isDeadMansTabActive = true;
   isKeyHeld = false;
-  showNotification(`Dead Man's Tab is ACTIVE! Hold down ${getKeyDisplayName(deadMansKey)} to keep the tab alive...`);
+  console.log('Dead Man\'s Tab: Switch is now ACTIVE');
+  showVisualIndicator();
   
   // Add event listeners for key events
   document.addEventListener('keydown', handleKeyDown, true);
@@ -41,6 +45,7 @@ function deactivateDeadMansTab() {
   isDeadMansTabActive = false;
   isKeyHeld = false;
   keyPressStartTime = null;
+  console.log('Dead Man\'s Tab: Switch is now INACTIVE');
   
   // Remove event listeners
   document.removeEventListener('keydown', handleKeyDown, true);
@@ -48,7 +53,7 @@ function deactivateDeadMansTab() {
   document.removeEventListener('focusin', handleFocusIn, true);
   document.removeEventListener('focusout', handleFocusOut, true);
   
-  showNotification('Dead Man\'s Tab is deactivated');
+  hideVisualIndicator();
 }
 
 function handleKeyDown(event) {
@@ -58,7 +63,8 @@ function handleKeyDown(event) {
   if (event.code === deadMansKey && !isKeyHeld) {
     isKeyHeld = true;
     keyPressStartTime = Date.now();
-    showNotification(`Holding ${getKeyDisplayName(deadMansKey)} - Tab is safe!`);
+    console.log('Dead Man\'s Tab: Key held down - tab is safe');
+    // No notification needed - user already knows they're holding the key
   }
 }
 
@@ -68,9 +74,8 @@ function handleKeyUp(event) {
   // If the released key is the dead man's key, close the tab immediately
   if (event.code === deadMansKey && isKeyHeld) {
     isKeyHeld = false;
-    showNotification(`${getKeyDisplayName(deadMansKey)} released! Closing tab...`);
-    
-    // Close tab immediately
+    console.log('Dead Man\'s Tab: Key released - closing tab!');
+    // Close tab immediately without notification
     chrome.runtime.sendMessage({action: 'closeTab'});
   }
 }
@@ -125,36 +130,52 @@ function getKeyDisplayName(keyCode) {
   return keyNames[keyCode] || keyCode;
 }
 
-function showNotification(message) {
-  // Create a temporary notification overlay
-  const notification = document.createElement('div');
-  notification.style.cssText = `
+function showVisualIndicator() {
+  // Remove existing indicator if it exists
+  hideVisualIndicator();
+  
+  // Create persistent visual indicator
+  const indicator = document.createElement('div');
+  indicator.id = 'dead-mans-tab-indicator';
+  indicator.style.cssText = `
     position: fixed;
     top: 20px;
     right: 20px;
     background: #ff4444;
     color: white;
-    padding: 15px 20px;
-    border-radius: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
     font-family: Arial, sans-serif;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: bold;
-    z-index: 10000;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    max-width: 300px;
-    word-wrap: break-word;
+    z-index: 10001;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    border: 2px solid #fff;
+    animation: pulse 2s infinite;
   `;
-  notification.textContent = message;
+  indicator.textContent = '💀 DEAD MAN\'S TAB ACTIVE';
   
-  document.body.appendChild(notification);
-  
-  // Remove notification after 3 seconds
-  setTimeout(() => {
-    if (notification.parentNode) {
-      notification.parentNode.removeChild(notification);
+  // Add pulse animation
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
     }
-  }, 3000);
+  `;
+  document.head.appendChild(style);
+  
+  document.body.appendChild(indicator);
 }
+
+function hideVisualIndicator() {
+  const indicator = document.getElementById('dead-mans-tab-indicator');
+  if (indicator) {
+    indicator.remove();
+  }
+}
+
 
 // Initialize - check if Dead Man's Tab is already active when the page loads
 chrome.runtime.sendMessage({action: 'getStatus'}, (response) => {
@@ -163,8 +184,12 @@ chrome.runtime.sendMessage({action: 'getStatus'}, (response) => {
     chrome.storage.sync.get(['deadMansKey'], (result) => {
       if (result.deadMansKey) {
         deadMansKey = result.deadMansKey;
+        console.log('Dead Man\'s Tab: Restoring active state with key:', deadMansKey);
+        activateDeadMansTab();
+      } else {
+        console.log('Dead Man\'s Tab: No saved key found, deactivating');
+        deactivateDeadMansTab();
       }
-      activateDeadMansTab();
     });
   }
 });

@@ -6,10 +6,20 @@ let isActive = false;
 // Listen for messages from content scripts and popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'closeTab') {
+    console.log('Dead Man\'s Tab: Background script received closeTab request');
     // Close the current tab
     chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
       if (tabs[0]) {
-        chrome.tabs.remove(tabs[0].id);
+        console.log('Dead Man\'s Tab: Attempting to close tab ID:', tabs[0].id, 'URL:', tabs[0].url);
+        chrome.tabs.remove(tabs[0].id, () => {
+          if (chrome.runtime.lastError) {
+            console.log('Dead Man\'s Tab: Error closing tab:', chrome.runtime.lastError);
+          } else {
+            console.log('Dead Man\'s Tab: Tab closed successfully');
+          }
+        });
+      } else {
+        console.log('Dead Man\'s Tab: No active tab found to close');
       }
     });
   } else if (request.action === 'getStatus') {

@@ -2,18 +2,17 @@
 // This script handles the popup interface interactions
 
 let isActive = false;
-let selectedKey = null; // No key set initially
+let selectedKey = null;
 let isCapturingKey = false;
 let captureTimer = null;
-let captureProgress = null;
+let currentKeys = new Set();
 
 // DOM elements
 const statusIndicator = document.getElementById('statusIndicator');
 const statusText = document.getElementById('statusText');
-const activateBtn = document.getElementById('activateBtn');
+const beginBtn = document.getElementById('beginBtn');
 const deactivateBtn = document.getElementById('deactivateBtn');
-const setKeyBtn = document.getElementById('setKeyBtn');
-const currentKey = document.getElementById('currentKey');
+const keyStatus = document.getElementById('keyStatus');
 const keyCapture = document.getElementById('keyCapture');
 const progressBar = document.getElementById('progressBar');
 const captureTimerDisplay = document.getElementById('captureTimer');
@@ -26,13 +25,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function setupEventListeners() {
-  activateBtn.addEventListener('click', activate);
+  beginBtn.addEventListener('click', handleBegin);
   deactivateBtn.addEventListener('click', deactivate);
-  setKeyBtn.addEventListener('click', startKeyCapture);
   
-  // Listen for key events during capture
-  document.addEventListener('keydown', handleKeyCapture);
-  document.addEventListener('keyup', handleKeyRelease);
+  // Listen for key events to track current keypresses
+  document.addEventListener('keydown', handleKeyDown);
+  document.addEventListener('keyup', handleKeyUp);
 }
 
 function loadSettings() {
@@ -40,17 +38,67 @@ function loadSettings() {
   chrome.storage.sync.get(['deadMansKey'], (result) => {
     if (result.deadMansKey) {
       selectedKey = result.deadMansKey;
-      updateCurrentKeyDisplay();
     }
   });
 }
 
-function startKeyCapture() {
-  if (isCapturingKey) return;
+function handleKeyDown(event) {
+  currentKeys.add(event.code);
+  updateKeyStatus();
+}
+
+function handleKeyUp(event) {
+  currentKeys.delete(event.code);
+  updateKeyStatus();
   
+  // If we're capturing and this was our captured key, complete the capture
+  if (isCapturingKey && event.code === selectedKey) {
+    completeKeyCapture();
+  }
+}
+
+function updateKeyStatus() {
+  if (currentKeys.size === 0) {
+    keyStatus.textContent = 'None';
+  } else if (currentKeys.size === 1) {
+    const keyCode = Array.from(currentKeys)[0];
+    keyStatus.textContent = getKeyDisplayName(keyCode);
+  } else {
+    keyStatus.textContent = 'Multiple';
+  }
+}
+
+function handleBegin() {
+  console.log('Dead Man\'s Tab: Begin button clicked, current keys:', Array.from(currentKeys));
+  
+  if (isActive) {
+    // If already active, deactivate
+    console.log('Dead Man\'s Tab: Deactivating (already active)');
+    deactivate();
+    return;
+  }
+  
+  if (currentKeys.size === 1) {
+    // One key is held down - set it as the dead man's key and activate immediately
+    const keyCode = Array.from(currentKeys)[0];
+    selectedKey = keyCode;
+    console.log('Dead Man\'s Tab: One key detected, activating immediately with:', keyCode);
+    saveKeyAndActivate();
+  } else if (currentKeys.size === 0) {
+    // No keys held - start capture mode
+    console.log('Dead Man\'s Tab: No keys detected, starting capture mode');
+    startKeyCapture();
+  } else {
+    // Multiple keys held - show prompt to hold just one
+    console.log('Dead Man\'s Tab: Multiple keys detected, starting capture mode');
+    startKeyCapture();
+  }
+}
+
+function startKeyCapture() {
   isCapturingKey = true;
-  setKeyBtn.disabled = true;
-  setKeyBtn.textContent = '🎯 CAPTURING...';
+  beginBtn.disabled = true;
+  beginBtn.textContent = 'Capturing...';
   keyCapture.style.display = 'block';
   
   // Reset progress
@@ -65,40 +113,16 @@ function startKeyCapture() {
     progressBar.style.width = `${((3 - timeLeft) / 3) * 100}%`;
     
     if (timeLeft <= 0) {
-      // Time's up, but we need a key to be held
-      if (selectedKey) {
+      // Time's up, check if we have a key
+      if (currentKeys.size === 1) {
+        const keyCode = Array.from(currentKeys)[0];
+        selectedKey = keyCode;
         completeKeyCapture();
       } else {
         cancelKeyCapture();
       }
     }
   }, 1000);
-}
-
-function handleKeyCapture(event) {
-  if (!isCapturingKey) return;
-  
-  // Prevent default to avoid interfering with the page
-  event.preventDefault();
-  event.stopPropagation();
-  
-  // Set the captured key
-  selectedKey = event.code;
-  updateCurrentKeyDisplay();
-  
-  // If Enter is pressed, complete immediately
-  if (event.code === 'Enter') {
-    completeKeyCapture();
-  }
-}
-
-function handleKeyRelease(event) {
-  if (!isCapturingKey) return;
-  
-  // If the released key is our captured key, complete the capture
-  if (event.code === selectedKey) {
-    completeKeyCapture();
-  }
 }
 
 function completeKeyCapture() {
@@ -115,21 +139,12 @@ function completeKeyCapture() {
   
   // Update UI
   isCapturingKey = false;
-  setKeyBtn.disabled = false;
-  setKeyBtn.textContent = '🎯 SET DEAD MAN\'S KEY';
+  beginBtn.disabled = false;
+  beginBtn.textContent = 'Begin';
   keyCapture.style.display = 'none';
   
-  // If active, update the content script with the new key
-  if (isActive) {
-    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-      if (tabs[0]) {
-        chrome.tabs.sendMessage(tabs[0].id, {
-          action: 'updateKey',
-          key: selectedKey
-        });
-      }
-    });
-  }
+  // Activate immediately
+  saveKeyAndActivate();
 }
 
 function cancelKeyCapture() {
@@ -143,68 +158,13 @@ function cancelKeyCapture() {
   
   // Reset UI
   isCapturingKey = false;
-  setKeyBtn.disabled = false;
-  setKeyBtn.textContent = '🎯 SET DEAD MAN\'S KEY';
+  beginBtn.disabled = false;
+  beginBtn.textContent = 'Begin';
   keyCapture.style.display = 'none';
-  
-  // Reset key if no key was captured
-  if (!selectedKey) {
-    currentKey.textContent = 'No key set';
-  }
 }
 
-function updateCurrentKeyDisplay() {
-  if (selectedKey) {
-    const keyName = getKeyDisplayName(selectedKey);
-    currentKey.textContent = `Current: ${keyName}`;
-  } else {
-    currentKey.textContent = 'No key set';
-  }
-}
-
-function getKeyDisplayName(keyCode) {
-  const keyNames = {
-    'Space': 'Space',
-    'Enter': 'Enter',
-    'ShiftLeft': 'Left Shift',
-    'ShiftRight': 'Right Shift',
-    'ControlLeft': 'Left Ctrl',
-    'ControlRight': 'Right Ctrl',
-    'AltLeft': 'Left Alt',
-    'AltRight': 'Right Alt',
-    'Tab': 'Tab',
-    'Escape': 'Escape',
-    'Backspace': 'Backspace',
-    'Delete': 'Delete',
-    'ArrowUp': '↑ Arrow Up',
-    'ArrowDown': '↓ Arrow Down',
-    'ArrowLeft': '← Arrow Left',
-    'ArrowRight': '→ Arrow Right',
-    'KeyA': 'A', 'KeyB': 'B', 'KeyC': 'C', 'KeyD': 'D', 'KeyE': 'E',
-    'KeyF': 'F', 'KeyG': 'G', 'KeyH': 'H', 'KeyI': 'I', 'KeyJ': 'J',
-    'KeyK': 'K', 'KeyL': 'L', 'KeyM': 'M', 'KeyN': 'N', 'KeyO': 'O',
-    'KeyP': 'P', 'KeyQ': 'Q', 'KeyR': 'R', 'KeyS': 'S', 'KeyT': 'T',
-    'KeyU': 'U', 'KeyV': 'V', 'KeyW': 'W', 'KeyX': 'X', 'KeyY': 'Y', 'KeyZ': 'Z'
-  };
-  return keyNames[keyCode] || keyCode;
-}
-
-function checkStatus() {
-  chrome.runtime.sendMessage({action: 'getStatus'}, (response) => {
-    if (response && response.status === 'active') {
-      setActive(true);
-    } else {
-      setActive(false);
-    }
-  });
-}
-
-function activate() {
-  // Check if a key is set
-  if (!selectedKey) {
-    alert('Please set a Dead Man\'s key first!');
-    return;
-  }
+function saveKeyAndActivate() {
+  console.log('Dead Man\'s Tab: Saving key and activating:', selectedKey);
   
   // Send message to content script to activate with selected key
   chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
@@ -228,6 +188,8 @@ function activate() {
               });
             }, 100);
           });
+        } else {
+          console.log('Dead Man\'s Tab: Successfully activated content script');
         }
       });
     }
@@ -256,13 +218,50 @@ function setActive(active) {
   
   if (active) {
     statusIndicator.className = 'status-indicator active';
-    statusText.textContent = 'ACTIVE - Hold a key!';
-    activateBtn.style.display = 'none';
+    statusText.textContent = 'ACTIVE - Hold your key!';
+    beginBtn.style.display = 'none';
     deactivateBtn.style.display = 'block';
   } else {
     statusIndicator.className = 'status-indicator inactive';
     statusText.textContent = 'Inactive';
-    activateBtn.style.display = 'block';
+    beginBtn.style.display = 'block';
     deactivateBtn.style.display = 'none';
   }
+}
+
+function checkStatus() {
+  chrome.runtime.sendMessage({action: 'getStatus'}, (response) => {
+    if (response && response.status === 'active') {
+      setActive(true);
+    } else {
+      setActive(false);
+    }
+  });
+}
+
+function getKeyDisplayName(keyCode) {
+  const keyNames = {
+    'Space': 'Space',
+    'Enter': 'Enter',
+    'ShiftLeft': 'Left Shift',
+    'ShiftRight': 'Right Shift',
+    'ControlLeft': 'Left Ctrl',
+    'ControlRight': 'Right Ctrl',
+    'AltLeft': 'Left Alt',
+    'AltRight': 'Right Alt',
+    'Tab': 'Tab',
+    'Escape': 'Escape',
+    'Backspace': 'Backspace',
+    'Delete': 'Delete',
+    'ArrowUp': '↑ Arrow Up',
+    'ArrowDown': '↓ Arrow Down',
+    'ArrowLeft': '← Arrow Left',
+    'ArrowRight': '→ Arrow Right',
+    'KeyA': 'A', 'KeyB': 'B', 'KeyC': 'C', 'KeyD': 'D', 'KeyE': 'E',
+    'KeyF': 'F', 'KeyG': 'G', 'KeyH': 'H', 'KeyI': 'I', 'KeyJ': 'J',
+    'KeyK': 'K', 'KeyL': 'L', 'KeyM': 'M', 'KeyN': 'N', 'KeyO': 'O',
+    'KeyP': 'P', 'KeyQ': 'Q', 'KeyR': 'R', 'KeyS': 'S', 'KeyT': 'T',
+    'KeyU': 'U', 'KeyV': 'V', 'KeyW': 'W', 'KeyX': 'X', 'KeyY': 'Y', 'KeyZ': 'Z'
+  };
+  return keyNames[keyCode] || keyCode;
 }

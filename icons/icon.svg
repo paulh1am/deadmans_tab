@@ -1,32 +1,53 @@
-<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background circle -->
-  <circle cx="64" cy="64" r="60" fill="#ff4444" stroke="#fff" stroke-width="4"/>
-  
-  <!-- Skull shape -->
-  <circle cx="64" cy="50" r="25" fill="#fff"/>
-  
-  <!-- Eye sockets -->
-  <circle cx="55" cy="45" r="4" fill="#333"/>
-  <circle cx="73" cy="45" r="4" fill="#333"/>
-  
-  <!-- Nose -->
-  <path d="M 64 50 L 60 55 L 68 55 Z" fill="#333"/>
-  
-  <!-- Mouth -->
-  <path d="M 55 60 Q 64 70 73 60" stroke="#333" stroke-width="3" fill="none"/>
-  
-  <!-- Crossbones -->
-  <g transform="translate(64, 64)">
-    <!-- First bone -->
-    <rect x="-25" y="-3" width="50" height="6" fill="#fff" rx="3"/>
-    <circle cx="-25" cy="0" r="6" fill="#fff"/>
-    <circle cx="25" cy="0" r="6" fill="#fff"/>
-    
-    <!-- Second bone (rotated) -->
-    <g transform="rotate(45)">
-      <rect x="-25" y="-3" width="50" height="6" fill="#fff" rx="3"/>
-      <circle cx="-25" cy="0" r="6" fill="#fff"/>
-      <circle cx="25" cy="0" r="6" fill="#fff"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 128 128">
+  <!-- Generator: Adobe Illustrator 29.8.2, SVG Export Plug-In . SVG Version: 2.1.1 Build 3)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: none;
+        stroke: #333;
+        stroke-width: 3px;
+      }
+
+      .st1 {
+        fill: #fff;
+      }
+
+      .st2 {
+        fill: #333;
+      }
+
+      .st3 {
+        fill: #f44;
+        stroke: #fff;
+        stroke-width: 4px;
+      }
+    </style>
+  </defs>
+  <circle class="st3" cx="64.4" cy="64" r="60"/>
+  <g>
+    <circle class="st1" cx="64.4" cy="50" r="25"/>
+    <g>
+      <circle class="st2" cx="55.4" cy="45" r="4"/>
+      <circle class="st2" cx="73.4" cy="45" r="4"/>
+    </g>
+    <path class="st2" d="M64.4,50l-4,5h8l-4-5Z"/>
+    <path class="st0" d="M55.4,60c6,6.7,12,6.7,18,0"/>
+  </g>
+  <g>
+    <g>
+      <g>
+        <circle class="st1" cx="40.4" cy="89.9" r="6"/>
+        <circle class="st1" cx="88.4" cy="75.8" r="6"/>
+      </g>
+      <rect class="st1" x="37.7" y="80.4" width="54.7" height="4.5" transform="translate(-20.7 21.7) rotate(-16.4)"/>
+    </g>
+    <g>
+      <g>
+        <circle class="st1" cx="88.4" cy="89.9" r="6"/>
+        <circle class="st1" cx="40.4" cy="75.8" r="6"/>
+      </g>
+      <rect class="st1" x="36.4" y="80.4" width="54.7" height="4.5" transform="translate(101.7 179.9) rotate(-163.6)"/>
     </g>
   </g>
 </svg>

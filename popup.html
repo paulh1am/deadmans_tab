@@ -112,41 +112,53 @@
       margin-top: 15px;
     }
     
-    .key-selection {
+    .key-status {
       background: rgba(255, 255, 255, 0.1);
       border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 20px;
-    }
-    
-    .current-key {
-      font-size: 12px;
-      opacity: 0.9;
+      padding: 12px;
+      margin-bottom: 15px;
       text-align: center;
-      font-weight: bold;
-      margin-bottom: 10px;
     }
     
-    .set-key-btn {
-      width: 100%;
-      padding: 10px 15px;
-      border: none;
-      border-radius: 6px;
-      background: #4CAF50;
-      color: white;
+    .key-status-label {
+      font-size: 11px;
+      opacity: 0.8;
+      margin-bottom: 5px;
+    }
+    
+    .key-status-value {
+      font-size: 14px;
+      font-weight: bold;
+    }
+    
+    .instructions {
+      text-align: center;
       font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      opacity: 0.9;
+    }
+    
+    .begin-btn {
+      width: 100%;
+      padding: 15px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #ff4444;
+      color: white;
+      font-size: 16px;
       font-weight: bold;
       cursor: pointer;
       transition: all 0.3s ease;
       margin-bottom: 10px;
     }
     
-    .set-key-btn:hover {
-      background: #45a049;
-      transform: translateY(-1px);
+    .begin-btn:hover {
+      background: #ff6666;
+      transform: translateY(-2px);
     }
     
-    .set-key-btn:disabled {
+    .begin-btn:disabled {
       background: #666;
       cursor: not-allowed;
       transform: none;
@@ -204,31 +216,34 @@
     <span class="status-text" id="statusText">Inactive</span>
   </div>
   
-  <div class="key-selection">
-    <div class="current-key" id="currentKey">No key set</div>
-    <button id="setKeyBtn" class="set-key-btn">🎯 SET DEAD MAN'S KEY</button>
-    <div class="key-capture" id="keyCapture" style="display: none;">
-      <div class="capture-instructions">
-        <div class="capture-title">Hold down your key for 3 seconds...</div>
-        <div class="capture-progress">
-          <div class="progress-bar" id="progressBar"></div>
-        </div>
-        <div class="capture-timer" id="captureTimer">3</div>
-        <div class="capture-hint">Or press Enter to confirm immediately</div>
-      </div>
-    </div>
+  <div class="key-status">
+    <div class="key-status-label">Current Keypress:</div>
+    <div class="key-status-value" id="keyStatus">None</div>
+  </div>
+  
+  <div class="instructions">
+    Set dead man's switch on this tab
   </div>
   
   <div class="controls">
-    <button id="activateBtn" class="activate-btn">🚨 ACTIVATE</button>
+    <button id="beginBtn" class="begin-btn">Begin</button>
     <button id="deactivateBtn" class="deactivate-btn" style="display: none;">✅ Deactivate</button>
+  </div>
+  
+  <div class="key-capture" id="keyCapture" style="display: none;">
+    <div class="capture-instructions">
+      <div class="capture-title">Hold down a key to set your dead man's switch</div>
+      <div class="capture-progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="capture-timer" id="captureTimer">3</div>
+    </div>
   </div>
   
   <div class="info">
     <strong>How it works:</strong><br>
-    • Click "SET DEAD MAN'S KEY" and hold a key for 3 seconds<br>
-    • Click ACTIVATE to enable Dead Man's Tab<br>
-    • Hold down your set key to keep the tab alive<br>
+    • Click "Begin" to start the dead man's switch<br>
+    • Hold down a key to keep the tab alive<br>
     • Release the key and the tab closes instantly!
   </div>
   
