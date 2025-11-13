@@ -5,6 +5,9 @@ let isDeadMansTabActive = false;
 let deadMansKey = null; // No default key - must be set by user
 let isKeyHeld = false;
 let keyPressStartTime = null;
+let safetyCheckInterval = null;
+let activationTime = null;
+let keyWasEverHeld = false; // Track if key was ever held since activation
 
 // Listen for messages from the popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -29,7 +32,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 function activateDeadMansTab() {
   isDeadMansTabActive = true;
   isKeyHeld = false;
-  console.log('Dead Man\'s Tab: Switch is now ACTIVE');
+  keyWasEverHeld = false; // Reset flag on activation
+  activationTime = Date.now();
+  console.log('Dead Man\'s Tab: Switch is now ACTIVE with key:', deadMansKey);
   showVisualIndicator();
   
   // Add event listeners for key events
@@ -39,13 +44,24 @@ function activateDeadMansTab() {
   // Also listen for focus events to ensure we capture keys even when typing in inputs
   document.addEventListener('focusin', handleFocusIn, true);
   document.addEventListener('focusout', handleFocusOut, true);
+  
+  // Start periodic safety check - closes tab if key is released after being held
+  startSafetyCheck();
 }
 
 function deactivateDeadMansTab() {
+  console.log('Dead Man\'s Tab: Deactivating - resetting all state');
+  
+  // CRITICAL: Set to false FIRST to prevent any closing attempts
   isDeadMansTabActive = false;
   isKeyHeld = false;
+  keyWasEverHeld = false; // Reset flag
   keyPressStartTime = null;
-  console.log('Dead Man\'s Tab: Switch is now INACTIVE');
+  activationTime = null;
+  deadMansKey = null; // Clear the key to prevent any accidental matches
+  
+  // Stop safety check immediately - this is critical!
+  stopSafetyCheck();
   
   // Remove event listeners
   document.removeEventListener('keydown', handleKeyDown, true);
@@ -54,6 +70,89 @@ function deactivateDeadMansTab() {
   document.removeEventListener('focusout', handleFocusOut, true);
   
   hideVisualIndicator();
+  
+  console.log('Dead Man\'s Tab: Deactivation complete - all state reset, safety check stopped');
+}
+
+function startSafetyCheck() {
+  // Clear any existing interval
+  stopSafetyCheck();
+  
+  // Safety check: Backup mechanism in case keyup event is missed
+  // Only runs when switch is active and verifies state before closing
+  safetyCheckInterval = setInterval(() => {
+    // CRITICAL: Must verify switch is still active - if not, stop immediately
+    if (!isDeadMansTabActive) {
+      console.log('Dead Man\'s Tab: Safety check stopped - switch is not active');
+      stopSafetyCheck();
+      return;
+    }
+    
+    // CRITICAL: Must verify deadMansKey is set
+    if (!deadMansKey) {
+      console.log('Dead Man\'s Tab: Safety check stopped - no dead man\'s key set');
+      stopSafetyCheck();
+      return;
+    }
+    
+    // Only check if key is not currently held
+    if (!isKeyHeld) {
+      const timeSinceActivation = Date.now() - activationTime;
+      
+      // Close tab if:
+      // 1. Dead man's key was held and then released (keyWasEverHeld = true)
+      //    This means the user was using the switch and released it
+      // 2. OR if no dead man's key has been held for 3 seconds after activation
+      //    This is a failsafe for edge cases where activation happened but key was never pressed
+      if (keyWasEverHeld) {
+        // Dead man's key was held then released - close tab (backup to keyup handler)
+        // Final state verification before closing
+        if (isDeadMansTabActive && deadMansKey) {
+          console.log('Dead Man\'s Tab: Safety check - dead man\'s key was held but now released, closing tab!');
+          safeCloseTab();
+        } else {
+          console.log('Dead Man\'s Tab: Safety check - state changed, aborting close');
+          stopSafetyCheck();
+        }
+      } else if (timeSinceActivation > 3000 && activationTime) {
+        // No dead man's key has been held for 3 seconds - edge case failsafe
+        // This shouldn't happen in normal flow (user should press key immediately)
+        // Final state verification before closing
+        if (isDeadMansTabActive && deadMansKey) {
+          console.log('Dead Man\'s Tab: Safety check - no dead man\'s key held for 3 seconds, closing tab!');
+          safeCloseTab();
+        } else {
+          console.log('Dead Man\'s Tab: Safety check - state changed, aborting close');
+          stopSafetyCheck();
+        }
+      }
+    }
+  }, 200);
+}
+
+function stopSafetyCheck() {
+  if (safetyCheckInterval) {
+    clearInterval(safetyCheckInterval);
+    safetyCheckInterval = null;
+  }
+}
+
+function safeCloseTab() {
+  // CRITICAL: Always verify state is active before closing
+  if (!isDeadMansTabActive) {
+    console.warn('Dead Man\'s Tab: BLOCKED - Attempted to close tab but switch is not active!');
+    return false;
+  }
+  
+  // CRITICAL: Verify deadMansKey is set
+  if (!deadMansKey) {
+    console.warn('Dead Man\'s Tab: BLOCKED - Attempted to close tab but no dead man\'s key is set!');
+    return false;
+  }
+  
+  console.log('Dead Man\'s Tab: Closing tab (state verified: active=true, key=' + deadMansKey + ')');
+  chrome.runtime.sendMessage({action: 'closeTab'});
+  return true;
 }
 
 function handleKeyDown(event) {
@@ -62,6 +161,7 @@ function handleKeyDown(event) {
   // Only respond to the specific dead man's key
   if (event.code === deadMansKey && !isKeyHeld) {
     isKeyHeld = true;
+    keyWasEverHeld = true; // Mark that key has been held
     keyPressStartTime = Date.now();
     console.log('Dead Man\'s Tab: Key held down - tab is safe');
     // No notification needed - user already knows they're holding the key
@@ -69,14 +169,39 @@ function handleKeyDown(event) {
 }
 
 function handleKeyUp(event) {
-  if (!isDeadMansTabActive) return;
+  if (!isDeadMansTabActive) {
+    console.log('Dead Man\'s Tab: KeyUp ignored - switch not active');
+    return;
+  }
+  
+  // Verify deadMansKey is set
+  if (!deadMansKey) {
+    console.log('Dead Man\'s Tab: KeyUp ignored - no dead man\'s key set');
+    return;
+  }
+  
+  console.log('Dead Man\'s Tab: KeyUp event detected - code:', event.code, 'key:', event.key, 'deadMansKey:', deadMansKey, 'isKeyHeld:', isKeyHeld);
   
   // If the released key is the dead man's key, close the tab immediately
-  if (event.code === deadMansKey && isKeyHeld) {
+  if (event.code === deadMansKey) {
+    console.log('Dead Man\'s Tab: Dead man\'s key match confirmed! Closing tab...');
+    
+    // Reset key held state
     isKeyHeld = false;
-    console.log('Dead Man\'s Tab: Key released - closing tab!');
-    // Close tab immediately without notification
-    chrome.runtime.sendMessage({action: 'closeTab'});
+    
+    // Use safe close function that verifies state
+    const closed = safeCloseTab();
+    if (!closed) {
+      console.error('Dead Man\'s Tab: ERROR - safeCloseTab returned false! State:', {
+        isDeadMansTabActive,
+        deadMansKey,
+        isKeyHeld
+      });
+    } else {
+      console.log('Dead Man\'s Tab: Tab close request sent successfully');
+    }
+  } else {
+    console.log('Dead Man\'s Tab: KeyUp event does not match dead man\'s key (expected:', deadMansKey, 'got:', event.code, ')');
   }
 }
 
@@ -177,19 +302,13 @@ function hideVisualIndicator() {
 }
 
 
-// Initialize - check if Dead Man's Tab is already active when the page loads
-chrome.runtime.sendMessage({action: 'getStatus'}, (response) => {
-  if (response && response.status === 'active') {
-    // Load the saved key preference
-    chrome.storage.sync.get(['deadMansKey'], (result) => {
-      if (result.deadMansKey) {
-        deadMansKey = result.deadMansKey;
-        console.log('Dead Man\'s Tab: Restoring active state with key:', deadMansKey);
-        activateDeadMansTab();
-      } else {
-        console.log('Dead Man\'s Tab: No saved key found, deactivating');
-        deactivateDeadMansTab();
-      }
-    });
-  }
-});
+// Initialize - DO NOT automatically restore active state on new tabs
+// The dead man's switch should only be active on the tab where user clicked "Begin"
+// New tabs should start in inactive state
+console.log('Dead Man\'s Tab: Content script loaded - starting in inactive state');
+// Explicitly ensure we're inactive
+isDeadMansTabActive = false;
+isKeyHeld = false;
+keyWasEverHeld = false;
+deadMansKey = null;
+stopSafetyCheck();

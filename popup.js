@@ -45,15 +45,31 @@ function loadSettings() {
 function handleKeyDown(event) {
   currentKeys.add(event.code);
   updateKeyStatus();
+  
+  // If we're in capture mode
+  if (isCapturingKey) {
+    if (currentKeys.size === 1 && !captureTimer) {
+      // Single key pressed - start the timer
+      const keyCode = Array.from(currentKeys)[0];
+      selectedKey = keyCode;
+      console.log('Dead Man\'s Tab: Key detected during capture, starting 3-second timer:', keyCode);
+      startCaptureTimer();
+    } else if (currentKeys.size > 1 && captureTimer) {
+      // Multiple keys pressed - cancel the timer
+      console.log('Dead Man\'s Tab: Multiple keys detected, canceling capture');
+      cancelKeyCapture();
+    }
+  }
 }
 
 function handleKeyUp(event) {
   currentKeys.delete(event.code);
   updateKeyStatus();
   
-  // If we're capturing and this was our captured key, complete the capture
-  if (isCapturingKey && event.code === selectedKey) {
-    completeKeyCapture();
+  // If we're capturing and the key is released before timer completes, cancel
+  if (isCapturingKey && event.code === selectedKey && captureTimer) {
+    console.log('Dead Man\'s Tab: Key released before timer completed, canceling capture');
+    cancelKeyCapture();
   }
 }
 
@@ -101,6 +117,18 @@ function startKeyCapture() {
   beginBtn.textContent = 'Capturing...';
   keyCapture.style.display = 'block';
   
+  // Reset progress - wait for key to be pressed
+  progressBar.style.width = '0%';
+  captureTimerDisplay.textContent = 'Hold a key...';
+  captureTimer = null; // Timer will start when key is pressed
+}
+
+function startCaptureTimer() {
+  // Clear any existing timer
+  if (captureTimer) {
+    clearInterval(captureTimer);
+  }
+  
   // Reset progress
   progressBar.style.width = '0%';
   captureTimerDisplay.textContent = '3';
@@ -113,12 +141,12 @@ function startKeyCapture() {
     progressBar.style.width = `${((3 - timeLeft) / 3) * 100}%`;
     
     if (timeLeft <= 0) {
-      // Time's up, check if we have a key
-      if (currentKeys.size === 1) {
-        const keyCode = Array.from(currentKeys)[0];
-        selectedKey = keyCode;
+      // Time's up, check if we still have the key held
+      if (currentKeys.size === 1 && Array.from(currentKeys)[0] === selectedKey) {
+        console.log('Dead Man\'s Tab: Timer completed, key still held - activating');
         completeKeyCapture();
       } else {
+        console.log('Dead Man\'s Tab: Timer completed but key not held - canceling');
         cancelKeyCapture();
       }
     }
@@ -150,11 +178,16 @@ function completeKeyCapture() {
 function cancelKeyCapture() {
   if (!isCapturingKey) return;
   
+  console.log('Dead Man\'s Tab: Canceling key capture');
+  
   // Clear timer
   if (captureTimer) {
     clearInterval(captureTimer);
     captureTimer = null;
   }
+  
+  // Reset selected key (don't keep partial capture)
+  selectedKey = null;
   
   // Reset UI
   isCapturingKey = false;
@@ -216,12 +249,15 @@ function deactivate() {
 function setActive(active) {
   isActive = active;
   
+  // Toggle body background for active state
   if (active) {
+    document.body.classList.add('active');
     statusIndicator.className = 'status-indicator active';
     statusText.textContent = 'ACTIVE - Hold your key!';
     beginBtn.style.display = 'none';
     deactivateBtn.style.display = 'block';
   } else {
+    document.body.classList.remove('active');
     statusIndicator.className = 'status-indicator inactive';
     statusText.textContent = 'Inactive';
     beginBtn.style.display = 'block';
