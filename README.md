@@ -1,85 +1,109 @@
-# Dead Man's Tab - Chrome Extension
+# 💀 Dead Man's Tab
 
-A Chrome extension that closes the current tab when you release a held key. Perfect for those moments when you need to stay focused or add a bit of danger to your browsing experience!
+A Chrome extension that closes your tab the moment you release a key. Hold on tight.
 
-## Features
+<!-- TODO: Add demo GIF here -->
+<!-- Recommended: 600-800px wide, showing the full flow:
+     1. Click extension icon
+     2. Click "Activate" 
+     3. Hold a key (show the countdown or instant activation)
+     4. Release the key
+     5. Tab closes
+     Tools: LICEcap, Gifox, or ScreenToGif -->
 
-- 🚨 **One-click activation** - Simple popup interface
-- ⌨️ **Any key works** - Hold down any key to keep the tab alive
-- ⚠️ **Instant closure** - Tab closes immediately when you release the key
-- 🎯 **Works everywhere** - Functions on any website
-- 💀 **Skull and crossbones** - Themed interface
+## What is this?
+
+Dead Man's Tab turns any key into a dead man's switch for your browser tab. As long as you hold the key, the tab stays open. The moment you let go—it's gone.
+
+It's part productivity tool, part party trick, part existential browser experience.
 
 ## Installation
 
-1. Download or clone this repository
-2. Open Chrome and go to `chrome://extensions/`
-3. Enable "Developer mode" in the top right
-4. Click "Load unpacked" and select the `dead_mans` folder
-5. The extension should now appear in your extensions bar
+### From Source (Developer Mode)
 
-## Usage
+1. Clone or download this repository
+2. Open Chrome and navigate to `chrome://extensions/`
+3. Enable **Developer mode** (toggle in the top right)
+4. Click **Load unpacked** and select the `dead_mans` folder
+5. The skull icon should appear in your extensions toolbar
 
-1. Click the Dead Man's Tab extension icon in your browser toolbar
-2. Click the "🚨 ACTIVATE" button
-3. Hold down any key on your keyboard
-4. **Warning**: Release the key and your tab will close!
+<!-- TODO: Uncomment when published to Chrome Web Store
+### From Chrome Web Store
+[Install Dead Man's Tab](link-here) -->
+
+## How to Use
+
+1. **Click the extension icon** in your toolbar
+2. **Click "Activate"** and either:
+   - **Already holding a key?** That key becomes your dead man's switch instantly
+   - **Not holding a key?** Press and hold any key within 3 seconds
+3. **Keep holding the key** — a red indicator confirms the switch is active
+4. **Release the key** — the tab closes immediately
+
+That's it. Hold to live, release to die.
+
+## Use Cases
+
+- **Focus mode**: Open a distracting site, activate the switch. You can only stay if you're committed enough to hold a key.
+- **Presentations**: Risky live demos where failure means the tab disappears
+- **Games**: Challenge friends to browse while maintaining their grip
+- **Accountability**: Make procrastination physically uncomfortable
 
 ## How It Works
 
-- The extension injects a content script into every webpage
-- When activated, it listens for keydown and keyup events
-- The first key you press becomes the "dead man's switch"
-- When you release that key, the tab closes after a 1-second countdown
+The extension uses three components:
 
-## Safety Features
+- **Popup** (`popup.js`) — The activation interface and key capture countdown
+- **Content Script** (`content.js`) — Runs on webpages, listens for key events, triggers the close
+- **Background Worker** (`background.js`) — Handles the actual tab closing via Chrome's API
 
-- Visual notifications show when the extension is active
-- 1-second delay before closing gives you a chance to react
-- Easy deactivation through the popup
-- Clear warnings about the extension's behavior
-
-## File Structure
-
-```
-dead_mans/
-├── manifest.json          # Extension configuration
-├── content.js            # Content script (runs on web pages)
-├── background.js         # Background service worker
-├── popup.html           # Extension popup interface
-├── popup.js             # Popup script logic
-├── icons/               # Extension icons
-│   └── icon.svg         # SVG icon (convert to PNG for production)
-└── README.md            # This file
-```
-
-## Creating Icons
-
-The extension includes an SVG icon that you'll need to convert to PNG format for the different sizes:
-
-- 16x16 pixels
-- 32x32 pixels  
-- 48x48 pixels
-- 128x128 pixels
-
-You can use online SVG to PNG converters or tools like Inkscape to create these icons.
+When activated, the content script listens for your chosen key. A backup polling mechanism ensures the tab closes even if the browser misses the key release event.
 
 ## Permissions
 
-- `activeTab` - To interact with the current tab
-- `tabs` - To close tabs when the key is released
+| Permission | Why |
+|------------|-----|
+| `tabs` | Required to close the tab |
+| `storage` | Remembers your preferred dead man's key |
+| `activeTab` | Communicates with the current tab's content script |
+
+No data is collected. No external requests are made.
 
 ## Development
 
 To modify the extension:
 
-1. Make your changes to the relevant files
+1. Make changes to the source files
 2. Go to `chrome://extensions/`
-3. Click the refresh button on the Dead Man's Tab extension
+3. Click the refresh icon on Dead Man's Tab
 4. Test your changes
 
-## Warning
+The extension consists of:
 
-⚠️ **This extension will close your current tab when you release a key!** Make sure you've saved any important work before activating it.
+```
+dead_mans/
+├── manifest.json     # Extension configuration
+├── background.js     # Service worker (tab management)
+├── content.js        # Injected into pages (key detection)
+├── popup.html        # Extension popup markup
+├── popup.js          # Popup logic
+└── icons/            # Extension icons
+```
 
-Use responsibly and have fun! 💀
+## Limitations
+
+- Won't work on `chrome://` pages, the Chrome Web Store, or other protected URLs
+- Some websites with aggressive keyboard handling may interfere (rare)
+- The switch only affects the tab where it was activated
+
+## License
+
+MIT — do whatever you want with it.
+
+## Contributing
+
+Found a bug? Have an idea? Open an issue or submit a PR.
+
+---
+
+*Remember: every tab you love will eventually close. This extension just makes you confront that reality directly.*
