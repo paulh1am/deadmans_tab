@@ -44,10 +44,9 @@ That's it. Hold to live, release to die.
 
 ## Use Cases
 
-- **Focus mode**: Open a distracting site, activate the switch. You can only stay if you're committed enough to hold a key.
+- **Focus mode**: Open a distracting site, activate the switch. You can only stay if you're committed enough to hold a key–browse with one foot out the door!
 - **Presentations**: Risky live demos where failure means the tab disappears
-- **Games**: Challenge friends to browse while maintaining their grip
-- **Accountability**: Make procrastination physically uncomfortable
+- **Privacy**: Shopping for a secret gift? Watching the game instead of 'working'? Browsing a sensitive or private topic? Worried you'll be embarrassed if you were to drop dead while browsing? Worry no more!
 
 ## How It Works
 
