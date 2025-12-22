@@ -1,6 +1,6 @@
 # 💀 Dead Man's Tab
 
-A Chrome extension that closes your tab the moment you release a key. Hold on tight.
+A Chrome extension that closes your tab the moment you release a key. For when you prefer a dad man's close.
 
 <!-- TODO: Add demo GIF here -->
 <!-- Recommended: 600-800px wide, showing the full flow:
@@ -15,7 +15,7 @@ A Chrome extension that closes your tab the moment you release a key. Hold on ti
 
 Dead Man's Tab turns any key into a dead man's switch for your browser tab. As long as you hold the key, the tab stays open. The moment you let go—it's gone.
 
-It's part productivity tool, part party trick, part existential browser experience.
+It's for when you'd rather keep something on the DL. And who know's - we really could drop dead at any moment.
 
 ## Installation
 
@@ -36,16 +36,16 @@ It's part productivity tool, part party trick, part existential browser experien
 1. **Click the extension icon** in your toolbar
 2. **Click "Activate"** and either:
    - **Already holding a key?** That key becomes your dead man's switch instantly
-   - **Not holding a key?** Press and hold any key within 3 seconds
+   - **Not holding a key?** Press and hold any key during the 3 seconds launch countdown.
 3. **Keep holding the key** — a red indicator confirms the switch is active
 4. **Release the key** — the tab closes immediately
 
-That's it. Hold to live, release to die.
+That's it. Hold to browse, release to close.
 
 ## Use Cases
 
-- **Focus mode**: Open a distracting site, activate the switch. You can only stay if you're committed enough to hold a key–browse with one foot out the door!
-- **Presentations**: Risky live demos where failure means the tab disappears
+- **Focus mode**: Open a distracting site, activate the switch. You can only stay if you're committed enough to hold a key – browse a little more with one foot out the door!
+- **Presentations**: Risky live demos where failure means the tab disappears. We haven't tested this but maybe it would help.
 - **Privacy**: Shopping for a secret gift? Watching the game instead of 'working'? Browsing a sensitive or private topic? Worried you'll be embarrassed if you were to drop dead while browsing? Worry no more!
 
 ## How It Works
