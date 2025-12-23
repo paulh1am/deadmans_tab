@@ -1,6 +1,6 @@
 # 💀 Dead Man's Tab
 
-A Chrome extension that closes your tab the moment you release a key. For when you prefer a dad man's close.
+A Chrome extension that closes your tab the moment you release a key. For when you prefer a quick, easy close.
 
 <!-- TODO: Add demo GIF here -->
 <!-- Recommended: 600-800px wide, showing the full flow:
