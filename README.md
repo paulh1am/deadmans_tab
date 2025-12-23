@@ -15,7 +15,7 @@ A Chrome extension that closes your tab the moment you release a key. For when y
 
 Dead Man's Tab turns any key into a dead man's switch for your browser tab. As long as you hold the key, the tab stays open. The moment you let go—it's gone.
 
-It's for when you'd rather keep something on the DL. And who know's - we really could drop dead at any moment.
+It's for when you'd rather keep something... not up on your screen
 
 ## Installation
 
